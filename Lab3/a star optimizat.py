@@ -129,43 +129,51 @@ vect_h = [0, 10, 3, 7, 8, 0, 14, 3, 1, 2]
 gr = Graph(noduri, m, mp, start, scopuri, vect_h)
 NodParcurgere.graf = gr;
 
-
+# ex 14
 def a_star(gr):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     l_open = [NodParcurgere(gr.noduri.index(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))]
-
     # l_open contine nodurile candidate pentru expandare (este echivalentul lui c din A* varianta neoptimizata)
-
     # l_closed contine nodurile expandate
     l_closed = []
+    inloc_open = 0 # counter pt cate noduri au fost inlocuite in open
+    inloc_closed = 0
+
     while len(l_open) > 0:
         print("Coada actuala: " + str(l_open))
-        input()
         nodCurent = l_open.pop(0)
+        # dupa ce il scot din l_open il adaug in l_closed, la cele expandate
+
         l_closed.append(nodCurent)
         if gr.testeaza_scop(nodCurent):
             print("Solutie: ", end="")
             nodCurent.afisDrum()
             print("\n----------------\n")
+            print(f"Nr. noduri inlocuite in open: {inloc_open} si in closed: {inloc_closed}")
             return
         lSuccesori = gr.genereazaSuccesori(nodCurent)
         for s in lSuccesori:
             gasitC = False
-            for nodC in l_open:
-                if s.info == nodC.info:
+            for nodC in l_open: #daca nu a fost expandat inca
+                if s.info == nodC.info: #daca succesorul nu a fost expandat, am gasit unul bun
                     gasitC = True
-                    if s.f >= nodC.f:
+                    if s.f >= nodC.f: #il scot din calcul pe cel cu f-ul cel mai mare
                         lSuccesori.remove(s)
                     else:  # s.f<nodC.f
                         l_open.remove(nodC)
+                        print(f"{nodC} este inlocuit de {s} in open")
+                        inloc_open += 1
+
                     break
-            if not gasitC:
+            if not gasitC: #daca a fost expandat deja, fac acelasi lucru pt lista de noduri exoandate
                 for nodC in l_closed:
                     if s.info == nodC.info:
                         if s.f >= nodC.f:
                             lSuccesori.remove(s)
                         else:  # s.f<nodC.f
                             l_closed.remove(nodC)
+                            print(f"{nodC} este inlocuit de {s} in closed")
+                            inloc_closed += 1
                         break
         for s in lSuccesori:
             i = 0
@@ -182,9 +190,7 @@ def a_star(gr):
                 l_open.append(s)
 
 
+
 # 1,4,5 8,10 <---9			20
 # (f=10,g=7)(f=14,g=3)    <----(f=10,g=3)
-t1 = time.time()
-a_star(gr)
-t2 = time.time()
-print(t2 - t1)
+

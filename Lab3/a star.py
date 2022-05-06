@@ -1,13 +1,8 @@
 """
 Observatie pentru cei absenti la laborator: trebuie sa dati enter după fiecare afișare a cozii până vă apare o soluție. Afișarea era ca să vedem progresul algoritmului. Puteți să o dezactivați comentând print-ul cu coada și input()
 """
-from dataclasses import dataclass, field
-from typing import Any
+from queue import PriorityQueue
 
-@dataclass(order=True)
-class PrioritizedItem:
-    priority: int
-    item: Any=field(compare=False)
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
 class NodParcurgere:
@@ -57,6 +52,17 @@ class NodParcurgere:
         sir += " f:{})".format(self.f)
         return (sir)
 
+    def __eq__(self, other):
+        if self.f == other.f:
+            return True
+
+    def __lt__(self, other):
+        if self.f > other.f:
+            return True
+        elif self.f == other.f:
+            if self.g < other.g:
+                return True
+
 
 class Graph:  # graful problemei
     def __init__(self, noduri, matriceAdiacenta, costuri, start, scopuri, lista_h):
@@ -101,7 +107,8 @@ class Graph:  # graful problemei
 # pozitia i din vectorul de noduri da si numarul liniei/coloanei corespunzatoare din matricea de adiacenta
 noduri = ["a", "b", "c", "d", "e", "f", "g", "i", "j", "k"]
 
-costuri = [20,25,40,21,23,10,15,20,12,11,10]
+# ex 11
+costuri = [20, 25, 40, 21, 23, 10, 15, 20, 12, 11, 10]
 
 m = [
     [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
@@ -140,7 +147,6 @@ def a_star(gr, nrSolutiiCautate):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))]
 
-
     while len(c) > 0:
         print("Coada actuala: " + str(c))
         input()
@@ -163,11 +169,11 @@ def a_star(gr, nrSolutiiCautate):
                 if c[i].f > s.f:
                     gasit_loc = True
                     break
+                    # ex 12
                 elif c[i].f == s.f:
                     if c[i].g < s.g:
                         gasit_loc = True
                         break
-
 
             if gasit_loc:
                 c.insert(i, s)
@@ -175,22 +181,28 @@ def a_star(gr, nrSolutiiCautate):
                 c.append(s)
 
 
-# 7  2,4,5, 8,10
+def a_star_priority_queue(gr, nrSolutiiCautate):
+    q = PriorityQueue()
 
-a_star(gr, nrSolutiiCautate=3)
-"""
-11. (Lab:2, Acasa:1) La A*: schimbati algoritmul astfel incat să avem pentru fiecare nod un cost 
-asociat, pus intr-un vector de costuri, de exemplu, costuri=[10,20,5, ... etc.]. 
-Costul de pe pozitia i corespunde nodului de pe pozitia i din lista de noduri. 
-Nu vom mai avea o matrice de costuri pentru muchii, deoarece costul se aplica cand intram intr-un nod 
-(toate arcele care intra in nodul i au asociat costul lui i, de pe pozitia i, din vectorul de noduri). 
-De exemplu, daca nodul c are costul 8, atunci a->c, e->c au ambele asociate costul 8.
+    q.put(NodParcurgere(gr.indiceNod(gr.start),gr.start, None, 0, gr.calculeaza_h(gr.start)))
 
-12. (Lab:1, Acasa:1) Pentru A*, la adăugarea în coadă, realizați și ordonarea dupa g, in ordine descrescatoare, pentru f-uri egale
+    while not q.empty():
+        nodCurent = q.get()
 
-13. (Lab:3, Acasa:1) Implementare A* cu o structura de tip PriorityQueue (din modulul queue: https://docs.python.org/3/library/queue.html). Pentru ca această structură să funcționeze, obiectele din coadă au nevoie de o relație de ordine definită pentru ele, deci definiți un minim de operatori (__lt__, __eq__). Ordonarea trebuie făcută crescător după f, iar, pentru f-uri egale, descrescător după g. 
-Comparați cu cProfiler performanța funcției voastre față de cea dată în laborator.
+        if gr.testeaza_scop(nodCurent):
+            print("Solutie: ")
+            nodCurent.afisDrum()
+            print("\n----------------\n")
+            nrSolutiiCautate -= 1
+            if nrSolutiiCautate == 0:
+                return
+        lSuccesori = gr.genereazaSuccesori(nodCurent)
+        for s in lSuccesori:
+            q.put(s)
 
-14. (Lab:2, Acasa:1) Pentru A* optimizat. Afisati la fiecare inlocuire in cozile open, respectiv closed (cand nodul e sters din closed si adaugat succesorul in open), ce nod a fost inlocuit si de catre cine. Afisati la final, dupa solutie, numarul de noduri inlocuite in open si numarul de noduri inlocuite in closed.
 
-"""
+###################################################+
+#a_star(gr, nrSolutiiCautate=3)
+
+a_star_priority_queue(gr, nrSolutiiCautate=3)
+

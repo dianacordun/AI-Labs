@@ -1,8 +1,8 @@
-"""1. (Lab:2, Acasa:1) Îmbunătățire BF astfel incat sa afișeze un drum-solutie chiar in momentul
-in care se adauga nodul scop in coada (sa nu mai astepte sa ajungă să fie primul in coada)."""
-
 import cProfile
-
+import queue
+import random
+from collections import deque
+import numpy
 """
 ncalls: numărul de apeluri
 tottime: timpul total (agregat) în care a fost executată funcția curentă
@@ -40,6 +40,22 @@ class NodParcurgere:
         print("->".join(l))
         return len(l)
 
+    def testeazaDrum(self): #testeaza daca un drum este solutie(are exact 3 consoane)
+        nr_consoane = 0
+        nod = self
+        if nod.info not in "aeiou": # este consoana
+            nr_consoane += 1
+
+        while nod.parinte is not None:
+            if nod.parinte.info not in "aeiou":  # este consoana
+                nr_consoane += 1
+            nod = nod.parinte
+
+        if nr_consoane == 3:
+            return True
+        else:
+            return False
+
     def contineInDrum(self, infoNodNou):
         # return infoNodNou in self.obtineDrum()
         nodDrum = self
@@ -76,13 +92,14 @@ class Graph:  # graful problemei
     def genereazaSuccesori(self, nodCurent):
         listaSuccesori = []
         for i in range(self.nrNoduri):
+            # daca am muchie si nodul i nu se afla in drumul nodului curent (atunci ar fi predecesor)
             if self.matrice[nodCurent.id][i] == 1 and not nodCurent.contineInDrum(self.noduri[i]):
                 nodNou = NodParcurgere(i, self.noduri[i], nodCurent)
                 listaSuccesori.append(nodNou)
         return listaSuccesori
 
     def testeaza_scop(self, nodCurent):
-        return nodCurent.info in self.scopuri;
+        return nodCurent.info in self.scopuri
 
     def __repr__(self):
         sir = ""
@@ -121,13 +138,15 @@ gr = Graph(noduri, m, start, scopuri)
 # daca vrem doar o solutie, renuntam la variabila nrSolutiiCautate
 # si doar oprim algoritmul la afisarea primei solutii
 
+
+
 def breadth_first(gr, nrSolutiiCautate=1):
     # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
     c = [NodParcurgere(gr.noduri.index(gr.start), gr.start, None)]
+# un nod are id(index-ul nodului de start), info, parinte
 
     while len(c) > 0:
         print("Coada actuala: " + str(c))
-        input()
         nodCurent = c.pop(0)
         lSuccesori = gr.genereazaSuccesori(nodCurent)
 
@@ -136,39 +155,37 @@ def breadth_first(gr, nrSolutiiCautate=1):
                 print("Solutie:")
                 n.afisDrum()
                 print("\n----------------\n")
-                input()
                 nrSolutiiCautate -= 1
                 if nrSolutiiCautate == 0:
                     return
-
         c.extend(lSuccesori)
-
-
 
 def depth_first(gr, nrSolutiiCautate=1):
     # vom simula o stiva prin relatia de parinte a nodului curent
     df(NodParcurgere(gr.noduri.index(gr.start), gr.start, None), nrSolutiiCautate)
 
-
+"""
+Rezolvare 3
+"""
 def df(nodCurent, nrSolutiiCautate):
     if nrSolutiiCautate <= 0:  # testul acesta s-ar valida doar daca in apelul initial avem df(start,if nrSolutiiCautate=0)
         return nrSolutiiCautate
     print("Stiva actuala: " + "->".join(nodCurent.obtineDrum()))
-    input()
     if gr.testeaza_scop(nodCurent):
         print("Solutie: ", end="")
         nodCurent.afisDrum()
         print("\n----------------\n")
-        input()
         nrSolutiiCautate -= 1
         if nrSolutiiCautate == 0:
             return nrSolutiiCautate
-    print(f"Se expandeaza {nodCurent.info}")
+    #print(f"Se expandeaza {nodCurent.info}")
     lSuccesori = gr.genereazaSuccesori(nodCurent)
     for sc in lSuccesori:
         if nrSolutiiCautate != 0:
+            print(f"Se expandeaza {nodCurent.info}")
             nrSolutiiCautate = df(sc, nrSolutiiCautate)
-            print("Se intoarce ->")
+
+    print("Se intoarce ->")
     return nrSolutiiCautate
 
 
@@ -187,13 +204,16 @@ def dfi(nodCurent, adancime, nrSolutiiCautate):
         nrSolutiiCautate -= 1
         if nrSolutiiCautate == 0:
             return nrSolutiiCautate
-    if adancime == 1 and not gr.testeaza_scop(nodCurent):
-        print("Se intoarce ->")
     if adancime > 1:
-        print(f"Se expandeaza {nodCurent.info}")
         lSuccesori = gr.genereazaSuccesori(nodCurent)
         for sc in lSuccesori:
             if nrSolutiiCautate != 0:
+                #ex 5
+                if nodCurent.info in expandari:
+                    expandari[nodCurent.info] += 1
+                else:
+                    expandari[nodCurent.info] = 1
+
                 nrSolutiiCautate = dfi(sc, adancime - 1, nrSolutiiCautate)
 
     return nrSolutiiCautate
@@ -207,21 +227,216 @@ def depth_first_iterativ(gr, nrSolutiiCautate=1):
         nrSolutiiCautate = dfi(NodParcurgere(gr.noduri.index(gr.start), gr.start, None), i, nrSolutiiCautate)
 
 
+
 """
-Mai jos puteti comenta si decomenta apelurile catre algoritmi. Pentru moment e apelat doar breadth-first
+Rezolvare 2
 """
+def breadth_first_queue(gr):
+    # in coada vom avea doar noduri de tip NodParcurgere (nodurile din arborele de parcurgere)
+    c = queue.Queue()
+    c.put(NodParcurgere(gr.noduri.index(gr.start),gr.start,None))
+
+    while not c.empty():
+        nodCurent = c.get()
+        lSuccesori = gr.genereazaSuccesori(nodCurent)
+
+        for n in lSuccesori:
+            c.put(n) #punem succesorul in coada
+            if gr.testeaza_scop(n):
+                print("Solutie:")
+                n.afisDrum()
+                print("\n----------------\n")
+
+"""
+Rezolvare 6
+# drum solutie = drum cu 3 consoane
+"""
+def bf_consoane(gr):
+    c = queue.Queue()
+    c.put(NodParcurgere(gr.noduri.index(gr.start),gr.start,None))
+
+    while not c.empty():
+        nodCurent = c.get()
+        lSuccesori = gr.genereazaSuccesori(nodCurent)
+
+        for n in lSuccesori:
+            c.put(n) #punem succesorul in coada
+
+            if n.testeazaDrum():
+                print("Solutie:")
+                n.afisDrum()
+                print("\n----------------\n")
+
+"""
+Rezolvare 7
+"""
+def bf_optimizat(gr):
+    c = queue.Queue()
+    c.put(NodParcurgere(gr.noduri.index(gr.start), gr.start, None))
+
+    vizitati = [False for _ in range(len(noduri))]
+
+    while not c.empty():
+        nodCurent = c.get()
+        lSuccesori = gr.genereazaSuccesori(nodCurent)
+
+        # drumul de lungime minimă
+        # se adaugă un nod în coadă doar dacă nu a mai fost deja vizitat.
+        for n in lSuccesori:
+            if vizitati[n.id] == False:
+                vizitati[n.id] = True
+                c.put(n)
+
+            if gr.testeaza_scop(n):
+                print("Solutie:")
+                n.afisDrum()
+                print("\n----------------\n")
+                return
+
+
+
+
 
 #breadth_first(gr, nrSolutiiCautate=4)
 #cProfile.run("breadth_first(gr, nrSolutiiCautate=4)")
 """
+Pentru 1:
 Metoda ineficienta: 904 function calls in 4.937 seconds
 Metoda eficienta: 478 function calls in 3.356 seconds
 """
+
+"""
+Rezolvare 4
+"""
+# generare graf aleator
+def dfs_ex4():
+    n = int(input('Introduceti numarul de noduri: '))
+    noduri_nou = [str(x) for x in range(0, n)]
+
+    mat_random = numpy.random.randint(2, size=(n, n))
+
+    nr_muchii = 0
+
+    for i in range(0, n):
+        mat_random[i][i] = 0
+        for j in range(0, n):
+            if mat_random[i][j] == 1:
+                nr_muchii += 1
+
+    print(nr_muchii)
+    print(mat_random)
+
+    s = '0'
+    nr_scopuri = int(input('Introduceti numarul de scopuri: '))
+    scopuri_random = random.sample([str(aux) for aux in range(1, n)], nr_scopuri)
+    print(scopuri_random)
+
+    graf = Graph(noduri_nou, mat_random, s, scopuri_random)
+
+    print('DFS cu stiva: ')
+
+    dfs_lista(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
+
+    print('DFS cu deque: ')
+
+    dfs_deque(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
+
+    print('DFS cu LIFO Queue: ')
+
+    dfs_lifoqueue(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
+
+
+
+def dfs_lista(nodCurent, graf):
+
+    vizitat = [False for _ in range(graf.nrNoduri)]
+    stiva = []
+    stiva.append(nodCurent)
+
+    while len(stiva) > 0:
+        nodCurent = stiva[-1]
+        stiva.pop()
+
+        if not vizitat[int(nodCurent.info)]:
+            vizitat[int(nodCurent.info)] = True
+            if graf.testeaza_scop(nodCurent):
+                print(f"Am gasit nodul: {nodCurent}")
+
+        succesori = graf.genereazaSuccesori(nodCurent)
+
+        for nod in succesori:
+            if not vizitat[int(nod.info)]:
+                stiva.append(nod)
+    print()
+    return
+
+
+def dfs_deque(nodCurent, graf):
+
+    vizitat = [False for _ in range(graf.nrNoduri)]
+
+    deq = deque([])
+
+    deq.append(nodCurent)
+
+    while len(deq) > 0:
+        nodCurent = deq[0]
+        deq.popleft()
+
+        if not vizitat[int(nodCurent.info)]:
+            vizitat[int(nodCurent.info)] = True
+            if graf.testeaza_scop(nodCurent):
+                print(f"Am gasit nodul: {nodCurent}")
+
+        succesori = graf.genereazaSuccesori(nodCurent)
+
+        for nod in succesori:
+            if not vizitat[int(nod.info)]:
+                deq.append(nod)
+
+    print()
+    return
+
+
+def dfs_lifoqueue(nodCurent, graf):
+
+    vizitat = [False for _ in range(graf.nrNoduri)]
+    lifo = queue.LifoQueue()
+    lifo.put(nodCurent)
+
+    while not lifo.empty():
+        nodCurent = lifo.get()
+
+        if not vizitat[int(nodCurent.info)]:
+            vizitat[int(nodCurent.info)] = True
+            if graf.testeaza_scop(nodCurent):
+                print(f"Am gasit nodul: {nodCurent}")
+
+        succesori = graf.genereazaSuccesori(nodCurent)
+
+        for nod in succesori:
+            if not vizitat[int(nod.info)]:
+                lifo.put(nod)
+    print()
+    return
+
+
+
 ####################################################
+#breadth_first_queue(gr)
 
-
-depth_first(gr, nrSolutiiCautate=5)
+####################################################
+#depth_first(gr, nrSolutiiCautate=5)
 #cProfile.run("depth_first(gr, nrSolutiiCautate=5)")
-##################################################
 
+##################################################
+#dfs_ex4()
+
+##################################################
+expandari = {}
 #depth_first_iterativ(gr, nrSolutiiCautate=4)
+#print(expandari)
+
+##################################
+#bf_consoane(gr)
+bf_optimizat(gr)

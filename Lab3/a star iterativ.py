@@ -4,6 +4,9 @@ Observatie pentru cei absenti la laborator: trebuie sa dati enter după fiecare 
 
 
 # informatii despre un nod din arborele de parcurgere (nu din graful initial)
+import time
+
+
 class NodParcurgere:
     graf = None  # static
 
@@ -127,14 +130,16 @@ vect_h = [5, 10, 3, 7, 8, 0, 14, 3, 1, 2]
 gr = Graph(noduri, m, mp, start, scopuri, vect_h)
 NodParcurgere.graf = gr;
 
-
+# ex 16
+# pt fiecare nod de cate ori a fost parcurs
 def ida_star(gr, nrSolutiiCautate):
+    global parcurgeri
     nodStart = NodParcurgere(gr.indiceNod(gr.start), gr.start, None, 0, gr.calculeaza_h(gr.start))
     limita = nodStart.f
     while True:
 
         print("Limita de pornire: ", limita)
-        nrSolutiiCautate, rez = construieste_drum(gr, nodStart, limita, nrSolutiiCautate)
+        nrSolutiiCautate, rez = construieste_drum(gr, nodStart, limita, nrSolutiiCautate,parcurgeri)
         if rez == "gata":
             break
         if rez == float('inf'):
@@ -142,26 +147,37 @@ def ida_star(gr, nrSolutiiCautate):
             break
         limita = rez
         print(">>> Limita noua: ", limita)
-        input()
 
+    for nod in parcurgeri:
+        print(f"Nodul {nod} a fost parcurs de {parcurgeri[nod]} ori")
 
-def construieste_drum(gr, nodCurent, limita, nrSolutiiCautate):
+def construieste_drum(gr, nodCurent, limita, nrSolutiiCautate, parcurgeri):
+    global t1, t2
     print("A ajuns la: ", nodCurent)
     if nodCurent.f > limita:
         return nrSolutiiCautate, nodCurent.f
     if gr.testeaza_scop(nodCurent) and nodCurent.f == limita:
+        t2 = time.time()
+        print(f"<<<<< Timpul pana la obtinerea solutiei: {t2 - t1} secunde")
+        t1 = t2
         print("Solutie: ")
         nodCurent.afisDrum()
         print(limita)
         print("\n----------------\n")
-        input()
         nrSolutiiCautate -= 1
         if nrSolutiiCautate == 0:
             return 0, "gata"
     lSuccesori = gr.genereazaSuccesori(nodCurent)
     minim = float('inf')
+
     for s in lSuccesori:
-        nrSolutiiCautate, rez = construieste_drum(gr, s, limita, nrSolutiiCautate)
+        # nodul curent a mai fost extins o data
+        if nodCurent.info in parcurgeri.keys():
+            parcurgeri[nodCurent.info] += 1
+        else:
+            parcurgeri[nodCurent.info] = 14
+
+        nrSolutiiCautate, rez = construieste_drum(gr, s, limita, nrSolutiiCautate,parcurgeri)
         if rez == "gata":
             return 0, "gata"
         print("Compara ", rez, " cu ", minim)
@@ -172,4 +188,7 @@ def construieste_drum(gr, nodCurent, limita, nrSolutiiCautate):
 
 
 # construieste_drum(a)->construieste_drum(c)
+t1 = time.time()
+t2 = 0
+parcurgeri = {}
 ida_star(gr, nrSolutiiCautate=3)
