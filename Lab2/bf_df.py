@@ -309,12 +309,10 @@ Metoda eficienta: 478 function calls in 3.356 seconds
 Rezolvare 4
 """
 # generare graf aleator
-def dfs_ex4():
+def generare_graf():
     n = int(input('Introduceti numarul de noduri: '))
-    noduri_nou = [str(x) for x in range(0, n)]
-
-    mat_random = numpy.random.randint(2, size=(n, n))
-
+    noduri_nou = [str(x) for x in range(0, n)] # lista de noduri
+    mat_random = numpy.random.randint(2, size=(n, n)) # matricea de adiacenta
     nr_muchii = 0
 
     for i in range(0, n):
@@ -326,6 +324,7 @@ def dfs_ex4():
     print(nr_muchii)
     print(mat_random)
 
+    # generare nr random de scopuri
     s = '0'
     nr_scopuri = int(input('Introduceti numarul de scopuri: '))
     scopuri_random = random.sample([str(aux) for aux in range(1, n)], nr_scopuri)
@@ -333,18 +332,14 @@ def dfs_ex4():
 
     graf = Graph(noduri_nou, mat_random, s, scopuri_random)
 
-    print('DFS cu stiva: ')
-
+    print('DFS cu lista pe post de stiva: ')
     dfs_lista(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
 
     print('DFS cu deque: ')
-
     dfs_deque(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
 
     print('DFS cu LIFO Queue: ')
-
     dfs_lifoqueue(NodParcurgere(graf.noduri.index(graf.start), graf.start, None), graf)
-
 
 
 def dfs_lista(nodCurent, graf):
@@ -354,7 +349,7 @@ def dfs_lista(nodCurent, graf):
     stiva.append(nodCurent)
 
     while len(stiva) > 0:
-        nodCurent = stiva[-1]
+        nodCurent = stiva[-1] # scot ultimul nod in lista
         stiva.pop()
 
         if not vizitat[int(nodCurent.info)]:
@@ -362,10 +357,10 @@ def dfs_lista(nodCurent, graf):
             if graf.testeaza_scop(nodCurent):
                 print(f"Am gasit nodul: {nodCurent}")
 
-        succesori = graf.genereazaSuccesori(nodCurent)
+        l_succesori = graf.genereazaSuccesori(nodCurent)
 
-        for nod in succesori:
-            if not vizitat[int(nod.info)]:
+        for nod in l_succesori:
+            if not vizitat[int(nod.info)]: # este adaugat in stiva doar daca e nevizitat
                 stiva.append(nod)
     print()
     return
@@ -374,9 +369,7 @@ def dfs_lista(nodCurent, graf):
 def dfs_deque(nodCurent, graf):
 
     vizitat = [False for _ in range(graf.nrNoduri)]
-
     deq = deque([])
-
     deq.append(nodCurent)
 
     while len(deq) > 0:
@@ -388,9 +381,9 @@ def dfs_deque(nodCurent, graf):
             if graf.testeaza_scop(nodCurent):
                 print(f"Am gasit nodul: {nodCurent}")
 
-        succesori = graf.genereazaSuccesori(nodCurent)
+        l_succesori = graf.genereazaSuccesori(nodCurent)
 
-        for nod in succesori:
+        for nod in l_succesori:
             if not vizitat[int(nod.info)]:
                 deq.append(nod)
 
@@ -412,14 +405,13 @@ def dfs_lifoqueue(nodCurent, graf):
             if graf.testeaza_scop(nodCurent):
                 print(f"Am gasit nodul: {nodCurent}")
 
-        succesori = graf.genereazaSuccesori(nodCurent)
+        l_succesori = graf.genereazaSuccesori(nodCurent)
 
-        for nod in succesori:
+        for nod in l_succesori:
             if not vizitat[int(nod.info)]:
                 lifo.put(nod)
     print()
     return
-
 
 
 ####################################################
@@ -430,7 +422,7 @@ def dfs_lifoqueue(nodCurent, graf):
 #cProfile.run("depth_first(gr, nrSolutiiCautate=5)")
 
 ##################################################
-#dfs_ex4()
+#generare_graf()
 
 ##################################################
 expandari = {}
