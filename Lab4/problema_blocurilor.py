@@ -17,7 +17,7 @@ class NodParcurgere:
         self.f = self.g + self.h
 
     def obtineDrum(self):
-        l = [self];
+        l = [self]
         nod = self
         while nod.parinte is not None:
             l.insert(0, nod.parinte)
@@ -108,8 +108,9 @@ class Graph:  # graful problemei
         nr_stive = len(stive_c)
         for idx in range(nr_stive):  # idx= indicele stivei de pe care iau bloc
 
-            if len(stive_c[idx]) == 0:
+            if len(stive_c[idx]) == 0: # stiva vida
                 continue
+                # trece la urmatoarea iteratie
             copie_interm = copy.deepcopy(stive_c)
             bloc = copie_interm[idx].pop()  # iau varful stivei
             for j in range(nr_stive):  # j = indicele stivei pe care pun blocul
@@ -117,7 +118,11 @@ class Graph:  # graful problemei
                     continue
                 stive_n = copy.deepcopy(copie_interm)  # lista noua de stive
                 stive_n[j].append(bloc)  # pun blocul
-                costMutareBloc = 1 + ord(bloc) - ord("a")
+                costMutareBloc = 1 + ord(bloc) - ord("a") # a cata litera din alfabet
+                # costMutareBloc = 1 + ord(elem) - ord("a") # adun costul lui elem
+
+                # +1 pt ca costurile incep de la 1
+
                 if not nodCurent.contineInDrum(stive_n):
                     nod_nou = NodParcurgere(stive_n, nodCurent, cost=nodCurent.g + costMutareBloc,
                                             h=self.calculeaza_h(stive_n, tip_euristica))
@@ -129,22 +134,31 @@ class Graph:  # graful problemei
     def calculeaza_h(self, infoNod, tip_euristica="euristica banala"):
         if tip_euristica == "euristica banala":
             if infoNod not in self.scopuri:
+                #costul minim pe o mutare daca nu este scop
                 return 1  # se pune costul minim pe o mutare
             return 0
         elif tip_euristica == "euristica admisibila 1":
             # calculez cate blocuri nu sunt la locul fata de fiecare dintre starile scop, si apoi iau minimul dintre aceste valori
             euristici = []
+            # pt mai multe stari finale
+            # enumerate (indice, element)
             for (iScop, scop) in enumerate(self.scopuri):
                 h = 0
+                # iStiva = indexul stivei
+                # iElem = indexul elementului de pe o stiva(nivelul)
                 for iStiva, stiva in enumerate(infoNod):
                     for iElem, elem in enumerate(stiva):
                         try:
                             # exista în stiva scop indicele iElem dar pe acea pozitie nu se afla blocul din infoNod
+                            # caut sa vad daca este asezat unde trebuie elem
                             if elem != scop[iStiva][iElem]:
-                                h += 1  # adun cu costul minim pe o mutare (adica costul lui a)
-                        except IndexError:
+                                # nu e la locul lui
+
+                                # adun costul lui elem
+                                h += 1 + ord(elem) - ord("a")  # adun cu costul minim pe o mutare (adica costul lui a)
+                        except IndexError: #nu e la locul lui, pt ca in configuratia finala nici nu se afla element acolo
                             # nici macar nu exista pozitia iElem in stiva cu indicele iStiva din scop
-                            h += 1
+                            h += 1 + ord(elem) - ord("a")
                 euristici.append(h)
             return min(euristici)
         elif tip_euristica == "euristica admisibila 2":
@@ -157,13 +171,13 @@ class Graph:  # graful problemei
                         try:
                             # exista în stiva scop indicele iElem dar pe acea pozitie nu se afla blocul din infoNod
                             if elem != scop[iStiva][iElem]:
-                                h += 1
+                                h += 1 + ord(elem) - ord("a")
                             else:  # elem==scop[iStiva][iElem]:
                                 if stiva[:iElem] != scop[iStiva][:iElem]:
-                                    h += 2
+                                    h += 2 + ord(elem) - ord("a") #pt ca trebuie si pus la loc dupa ce il mut si pun literele corecte sub el
                         except IndexError:
                             # nici macar nu exista pozitia iElem in stiva cu indicele iStiva din scop
-                            h += 1
+                            h += 1 + ord(elem) - ord("a")
                 euristici.append(h)
             return min(euristici)
         else:  # tip_euristica=="euristica neadmisibila"
