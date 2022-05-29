@@ -390,7 +390,7 @@ def dfs_deque(nodCurent, graf):
     print()
     return
 
-
+# vizitat = False cand il scot de pe stiva
 def dfs_lifoqueue(nodCurent, graf):
 
     vizitat = [False for _ in range(graf.nrNoduri)]

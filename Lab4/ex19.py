@@ -126,6 +126,7 @@ class Graph:  # graful problemei
             if flag:
                 return 1 # se pune costul minim pe o mutare
             return 0
+        # !
         elif tip_euristica == "euristica admisibila 4":
             euristici = []
             h = 0
@@ -191,7 +192,7 @@ def a_star(gr, nrSolutiiCautate, tip_euristica):
             else:
                 c.append(s)
 
-
+# de modificat pt n
 def exista_solutie(stive):
     # toate stivele trebuie sa aiba minim un element
     if all(len(stiva) <= 1 for stiva in stive):
